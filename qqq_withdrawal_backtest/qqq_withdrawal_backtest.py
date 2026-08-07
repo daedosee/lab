@@ -19,8 +19,12 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
-from typing import cast
+import subprocess
+import sys
+from typing import Any, cast
+from urllib.request import urlretrieve
 
 import matplotlib
 
@@ -32,7 +36,29 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.patches import FancyBboxPatch, Patch
 import pandas as pd
-import yfinance as yf
+
+
+def is_colab_runtime() -> bool:
+    """현재 코드가 Google Colab에서 실행 중인지 확인한다."""
+    return bool(os.environ.get("COLAB_RELEASE_TAG")) or Path("/content").exists()
+
+
+IS_COLAB = is_colab_runtime()
+SCRIPT_DIR = (
+    Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
+)
+DEFAULT_OUTPUT_DIR = Path("/content/output") if IS_COLAB else SCRIPT_DIR / "output"
+
+try:
+    import yfinance as yf
+except ImportError:
+    if IS_COLAB:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "-q", "yfinance"]
+        )
+        import yfinance as yf
+    else:
+        raise
 
 
 # =============================================================================
@@ -217,15 +243,38 @@ ORANGE = "#F06432"
 TEXT_COLOR = "#55534F"
 MUTED_TEXT_COLOR = "#85827C"
 GRID_COLOR = "#DEDDD8"
-BACKGROUND_COLOR = "#FAFAF9"
+BACKGROUND_COLOR = "#FFFFFF"
 
 
 def configure_korean_font() -> None:
-    """macOS에서는 AppleGothic을 사용하고, 음수 기호 깨짐을 방지한다."""
-    korean_font_path = Path("/System/Library/Fonts/Supplemental/AppleGothic.ttf")
-    if korean_font_path.exists():
-        korean_font = font_manager.FontProperties(fname=korean_font_path)
-        plt.rcParams["font.family"] = korean_font.get_name()
+    """로컬과 Colab에서 사용할 수 있는 한글 글꼴을 설정한다."""
+    candidates = (
+        "Apple SD Gothic Neo",
+        "AppleGothic",
+        "NanumGothic",
+        "Noto Sans CJK KR",
+        "Malgun Gothic",
+    )
+    installed = {font.name for font in font_manager.fontManager.ttflist}
+    for candidate in candidates:
+        if candidate in installed:
+            plt.rcParams["font.family"] = candidate
+            plt.rcParams["axes.unicode_minus"] = False
+            return
+
+    if IS_COLAB:
+        font_path = Path("/content/.fonts/NanumGothic-Regular.ttf")
+        font_path.parent.mkdir(parents=True, exist_ok=True)
+        if not font_path.exists():
+            font_url = (
+                "https://raw.githubusercontent.com/google/fonts/main/"
+                "ofl/nanumgothic/NanumGothic-Regular.ttf"
+            )
+            urlretrieve(font_url, font_path)
+        font_manager.fontManager.addfont(font_path)
+        plt.rcParams["font.family"] = font_manager.FontProperties(
+            fname=font_path
+        ).get_name()
     plt.rcParams["axes.unicode_minus"] = False
 
 
@@ -264,9 +313,9 @@ def add_chart_header(fig: Figure) -> None:
     """제목, 조건 설명과 범례를 추가한다."""
     fig.text(
         0.055,
-        0.965,
-        "QQQ 투자 시작연도별 10년 후 준비금",
-        fontsize=18,
+        0.97,
+        "성장 준비금 10년 생존 검증｜QQQ 시작연도별 백테스트",
+        fontsize=28,
         color=TEXT_COLOR,
         fontweight="semibold",
         ha="left",
@@ -274,9 +323,9 @@ def add_chart_header(fig: Figure) -> None:
     )
     fig.text(
         0.055,
-        0.915,
+        0.89,
         "초기 1억원 · 매월 말 100만원 인출 · 실제 원/달러 환율 반영",
-        fontsize=11,
+        fontsize=16,
         color=MUTED_TEXT_COLOR,
         ha="left",
         va="top",
@@ -288,10 +337,10 @@ def add_chart_header(fig: Figure) -> None:
     fig.legend(
         handles=legend_items,
         loc="upper left",
-        bbox_to_anchor=(0.055, 0.875),
+        bbox_to_anchor=(0.055, 0.835),
         frameon=False,
         ncol=2,
-        fontsize=10,
+        fontsize=14,
         handlelength=1.0,
         columnspacing=1.5,
     )
@@ -300,11 +349,32 @@ def add_chart_header(fig: Figure) -> None:
 def style_chart_axes(ax: Axes, summary: pd.DataFrame) -> None:
     """축, 눈금, 그리드와 여백을 정리한다."""
     x_positions = list(range(len(summary)))
-    ax.set_xlabel("투자 시작연도", color=TEXT_COLOR, labelpad=12)
-    ax.set_ylabel("10년 후 준비금 (억원)", color=TEXT_COLOR, labelpad=10)
+    ax.axhline(
+        1.0,
+        color=BLUE,
+        linewidth=1.2,
+        linestyle=(0, (4, 4)),
+        alpha=0.38,
+        zorder=1,
+    )
+    ax.text(
+        0.995,
+        1.0,
+        "초기 준비금 1억원",
+        transform=ax.get_yaxis_transform(),
+        ha="right",
+        va="bottom",
+        fontsize=14,
+        color=BLUE,
+        alpha=0.78,
+        bbox={"facecolor": BACKGROUND_COLOR, "edgecolor": "none", "pad": 1.5},
+        zorder=5,
+    )
+    ax.set_xlabel("투자 시작연도", color=TEXT_COLOR, fontsize=15, labelpad=12)
+    ax.set_ylabel("10년 후 준비금 (억원)", color=TEXT_COLOR, fontsize=15, labelpad=10)
     ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("{x:,.1f}"))
     ax.set_xticks(x_positions, summary["start_year"].astype(str))
-    ax.tick_params(axis="both", colors=MUTED_TEXT_COLOR, labelsize=10, length=0)
+    ax.tick_params(axis="both", colors=MUTED_TEXT_COLOR, labelsize=13, length=0)
     ax.grid(axis="y", color=GRID_COLOR, linewidth=0.9, zorder=0)
     ax.set_axisbelow(True)
     for spine in ax.spines.values():
@@ -316,17 +386,24 @@ def add_bar_labels(
     ax: Axes, rounded_bars: list[FancyBboxPatch], summary: pd.DataFrame
 ) -> None:
     """각 막대 위에 잔액 또는 고갈 표시를 붙인다."""
-    for bar, value, depleted in zip(
-        rounded_bars, summary["ending_balance"], summary["depleted_within_10y"]
+    for bar, value, depleted, months_survived in zip(
+        rounded_bars,
+        summary["ending_balance"],
+        summary["depleted_within_10y"],
+        summary["months_survived"],
     ):
-        label = "고갈" if depleted else f"{value / 100_000_000:.2f}"
+        if depleted:
+            years, months = divmod(int(months_survived), 12)
+            label = f"고갈\n({years}년 {months}개월)"
+        else:
+            label = f"{value / 100_000_000:.2f}억"
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 0.025,
             label,
             ha="center",
             va="bottom",
-            fontsize=9,
+            fontsize=15,
             color=ORANGE if depleted else TEXT_COLOR,
             fontweight="semibold",
         )
@@ -339,7 +416,7 @@ def save_chart(summary: pd.DataFrame, output_path: Path) -> None:
     amounts_in_100m = summary["ending_balance"] / 100_000_000
     x_positions = list(range(len(summary)))
 
-    fig, ax = plt.subplots(figsize=(12.5, 6.5), facecolor=BACKGROUND_COLOR)
+    fig, ax = plt.subplots(figsize=(12.5, 7.0), facecolor=BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
 
     rounded_bars = draw_rounded_bars(
@@ -353,10 +430,10 @@ def save_chart(summary: pd.DataFrame, output_path: Path) -> None:
         0.01,
         0.01,
         "QQQ 배당·분할 및 원/달러 환율 반영 · 세금, 환전/거래 수수료 및 물가 제외",
-        fontsize=8,
+        fontsize=13,
         color=MUTED_TEXT_COLOR,
     )
-    fig.tight_layout(rect=(0, 0.04, 1, 0.80))
+    fig.tight_layout(rect=(0, 0.04, 1, 0.77))
     fig.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close(fig)
 
@@ -365,20 +442,126 @@ def save_chart(summary: pd.DataFrame, output_path: Path) -> None:
 # 4. 결과 저장 및 화면 출력
 # =============================================================================
 
+SUMMARY_CSV_COLUMNS = {
+    "start_year": "시작연도",
+    "depleted_within_10y": "10년내고갈여부",
+    "depletion_month": "고갈월",
+    "months_survived": "유지개월수",
+    "starting_fx": "시작환율(원/달러)",
+    "ending_fx": "종료환율(원/달러)",
+    "ending_balance": "최종잔액(원)",
+    "total_withdrawn": "총인출액(원)",
+}
+
+DETAIL_CSV_COLUMNS = {
+    "start_year": "시작연도",
+    "date": "날짜",
+    "usdkrw": "원달러환율",
+    "monthly_return": "월수익률",
+    "balance_before_withdrawal_usd": "인출전잔액(달러)",
+    "requested_withdrawal_krw": "요청인출액(원)",
+    "withdrawal_usd": "실제인출액(달러)",
+    "withdrawal_krw": "실제인출액(원)",
+    "ending_balance_usd": "월말잔액(달러)",
+    "ending_balance_krw": "월말잔액(원)",
+}
+
+
+def format_duration(months: int) -> str:
+    """개월 수를 블로그 표에 적합한 연/개월 문자열로 변환한다."""
+    years, remaining_months = divmod(months, 12)
+    if remaining_months == 0:
+        return f"{years}년"
+    if years == 0:
+        return f"{remaining_months}개월"
+    return f"{years}년 {remaining_months}개월"
+
+
+def format_korean_won(amount: float) -> str:
+    """원화 금액을 반올림해 억원/만원 단위의 짧은 문자열로 변환한다."""
+    rounded_manwon = int(amount / 10_000 + 0.5)
+    if rounded_manwon == 0:
+        return "0원"
+
+    eok, manwon = divmod(rounded_manwon, 10_000)
+    if eok and manwon:
+        return f"{eok:,}억 {manwon:,}만원"
+    if eok:
+        return f"{eok:,}억원"
+    return f"{manwon:,}만원"
+
+
+def scalar_to_int(value: object) -> int:
+    """pandas가 Scalar로 추론한 정수 값을 Python int로 변환한다."""
+    return int(cast(Any, value))
+
+
+def scalar_to_float(value: object) -> float:
+    """pandas가 Scalar로 추론한 실수 값을 Python float로 변환한다."""
+    return float(cast(Any, value))
+
+
+def save_markdown_summary(summary: pd.DataFrame, output_path: Path) -> None:
+    """네이버 블로그 캡처용 간소화 Markdown 표를 저장한다."""
+    lines = [
+        "| 시작 연도 | 결과 | 고갈 시점 | 최종 잔액 | 총 인출액 |",
+        "|---:|:---:|:---|---:|---:|",
+    ]
+
+    for row in summary.itertuples(index=False):
+        duration = format_duration(scalar_to_int(row.months_survived))
+        if bool(row.depleted_within_10y):
+            result = "❌ 고갈"
+            depletion = f"{duration} 후"
+        else:
+            result = f"✅ {duration} 유지"
+            depletion = "—"
+
+        lines.append(
+            f"| {scalar_to_int(row.start_year)} | {result} | {depletion} | "
+            f"{format_korean_won(scalar_to_float(row.ending_balance))} | "
+            f"{format_korean_won(scalar_to_float(row.total_withdrawn))} |"
+        )
+
+    total_balance = scalar_to_float(summary["ending_balance"].sum())
+    average_balance = scalar_to_float(summary["ending_balance"].mean())
+    first_year = scalar_to_int(summary["start_year"].min())
+    last_year = scalar_to_int(summary["start_year"].max())
+    lines.extend(
+        [
+            "",
+            "### 전체 연도 요약",
+            "",
+            f"- 대상: {first_year}~{last_year}년 "
+            f"({len(summary)}개 시작 연도)",
+            f"- 10년 후 최종 잔액 합계: {format_korean_won(total_balance)}",
+            f"- 10년 후 평균 잔액: **{format_korean_won(average_balance)}**",
+            "- 고갈된 연도의 최종 잔액은 0원으로 포함했습니다.",
+        ]
+    )
+
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
 
 def save_results(
     summary: pd.DataFrame, detail: pd.DataFrame, output_dir: Path
-) -> tuple[Path, Path, Path]:
-    """CSV 2개와 PNG 그래프를 저장하고 각 경로를 반환한다."""
+) -> tuple[Path, Path, Path, Path]:
+    """CSV 2개, 블로그용 Markdown과 PNG 그래프를 저장한다."""
     output_dir.mkdir(parents=True, exist_ok=True)
     summary_path = output_dir / "qqq_10y_summary.csv"
     detail_path = output_dir / "qqq_monthly_detail.csv"
+    markdown_path = output_dir / "qqq_10y_summary.md"
     chart_path = output_dir / "qqq_10y_ending_reserve.png"
 
-    summary.to_csv(summary_path, index=False, encoding="utf-8-sig")
-    detail.to_csv(detail_path, index=False, encoding="utf-8-sig")
+    summary.rename(columns=SUMMARY_CSV_COLUMNS).to_csv(
+        summary_path, index=False, encoding="utf-8-sig"
+    )
+    detail.rename(columns=DETAIL_CSV_COLUMNS).to_csv(
+        detail_path, index=False, encoding="utf-8-sig"
+    )
+    save_markdown_summary(summary, markdown_path)
     save_chart(summary, chart_path)
-    return summary_path, detail_path, chart_path
+    return summary_path, detail_path, markdown_path, chart_path
 
 
 def print_summary(summary: pd.DataFrame) -> None:
@@ -405,7 +588,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--years", type=int, default=10)
     parser.add_argument("--initial-reserve", type=float, default=100_000_000)
     parser.add_argument("--monthly-withdrawal", type=float, default=1_000_000)
-    parser.add_argument("--output-dir", type=Path, default=Path("qqq_backtest_output"))
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIR,
+    )
+    if IS_COLAB:
+        args, _ = parser.parse_known_args()
+        return args
     return parser.parse_args()
 
 
@@ -432,11 +622,19 @@ def main() -> None:
         monthly_withdrawal=args.monthly_withdrawal,
     )
 
-    summary_path, detail_path, chart_path = save_results(
+    summary_path, detail_path, markdown_path, chart_path = save_results(
         summary, detail, args.output_dir
     )
     print_summary(summary)
-    print(f"\nSaved: {summary_path}, {detail_path}, {chart_path}")
+    print(
+        f"\nSaved: {summary_path}, {detail_path}, {markdown_path}, {chart_path}"
+    )
+
+    if IS_COLAB:
+        from IPython.display import Image, Markdown, display
+
+        display(Image(filename=str(chart_path)))
+        display(Markdown(markdown_path.read_text(encoding="utf-8")))
 
 
 if __name__ == "__main__":
