@@ -48,6 +48,17 @@ TEXT_COLOR = "#0B0B0B"           # 제목과 핵심 텍스트
 SECONDARY_TEXT_COLOR = "#666666" # 부제
 TICK_COLOR = "#777777"           # 축 제목과 눈금
 FOOTNOTE_COLOR = "#777777"       # 각주
+
+# 표 전용 색상
+TABLE_HEADER_COLOR = "#2B4A75"
+TABLE_HEADER_RULE_COLOR = "#7FB3D5"
+TABLE_TEXT_COLOR = "#1E293B"
+TABLE_MUTED_TEXT_COLOR = "#64748B"
+TABLE_BORDER_COLOR = "#F0F2F5"
+TABLE_STRIPE_COLOR = "#FAFBFC"
+TABLE_HOVER_COLOR = "#EFF6FF"
+TABLE_TOTAL_COLOR = "#E8EDF3"
+TABLE_TOTAL_RULE_COLOR = "#94A3B8"
 ```
 
 - 주요 데이터는 블루, 예금은 웜그레이를 사용한다.
@@ -111,15 +122,144 @@ ax.tick_params(axis="both", colors=TICK_COLOR, labelsize=12, length=0)
 
 ## 6. 표 구성
 
-- 글꼴은 그래프와 동일하게 Pretendard를 사용한다.
-- 표 제목은 18~20pt Bold, 열 제목은 12~13pt SemiBold, 본문은 12pt Regular를 권장한다.
-- 숫자는 오른쪽 정렬하고, 사례명·연도처럼 범주형 값은 가운데 또는 왼쪽 정렬한다.
-- 금액 단위와 소수점 자릿수는 같은 열에서 통일한다.
-- 헤더는 진한 남색이나 `TEXT_COLOR`를 사용하고 본문과 충분한 대비를 확보한다.
-- 행 구분은 굵은 테두리 대신 `GRID_COLOR`의 얇은 선을 사용한다.
-- 행이 많으면 옅은 교차 배경색을 사용하되 색 대비를 과하게 만들지 않는다.
-- 핵심 수치는 `QQQ_COLOR`와 Bold로 강조할 수 있다.
-- 블로그 캡처용 표에는 핵심 행과 열만 넣고 전체 상세 데이터는 CSV로 분리한다.
+표의 기준 구현은 `mortgage_calculator/mortgage_calculator.ipynb`로 한다. 다른 일반 규칙과 충돌하면 표에 대해서는 이 절의 규격을 우선한다.
+
+### 6.1 기본 레이아웃
+
+- 표는 최대 너비 `700px`의 래퍼 안에 배치한다.
+- 래퍼 바깥 여백은 위 `12px`, 아래 `28px`를 기본값으로 한다.
+- 래퍼에는 `1px solid #F0F2F5` 테두리와 `12px` 모서리 반경을 적용한다.
+- 좁은 화면에서는 내용이 찌그러지지 않도록 `overflow-x: auto`를 사용한다.
+- 표 너비는 `100%`, `border-collapse: separate`, `border-spacing: 0`으로 설정한다.
+- 표 배경은 흰색을 사용하며 과한 그림자는 넣지 않는다.
+
+### 6.2 글꼴과 숫자
+
+- 기본 글꼴은 Pretendard이며 시스템 글꼴을 대체 후보로 둔다.
+- 표 본문과 헤더의 기본 크기는 `13px`로 한다.
+- 숫자 폭이 행마다 흔들리지 않도록 `font-variant-numeric: tabular-nums`를 사용한다.
+- 금액과 수치는 오른쪽 정렬한다.
+- 상환 방식, 연차, 사례명처럼 행을 식별하는 첫 번째 열은 가운데 정렬한다.
+- 요약표의 첫 번째 열은 `font-weight: 600`으로 강조한다.
+- 상세표의 첫 번째 열은 `#64748B`, Regular로 두어 금액보다 시각적 우선순위를 낮춘다.
+
+### 6.3 제목과 캡션
+
+| 요소 | 크기 | 굵기 | 색상 | 여백 |
+|---|---:|---:|---|---|
+| 표 제목 | 20px | 700 | `#0F172A` | `30px 0 8px` |
+| 표 캡션 | 12px | 400 | `#64748B` | `0 0 10px` |
+| 표 헤더 | 13px | 700 | 흰색 | 셀 내부 `8px 12px` |
+| 표 본문 | 13px | 400 | `#1E293B` | 셀 내부 `7px 12px` |
+
+- 제목은 `{상환 방식} 연도별 내역`처럼 표의 내용을 바로 알 수 있게 쓴다.
+- 캡션은 `상환 방식 │ 대출금액 │ 금리 │ 기간`처럼 핵심 조건만 한 줄로 표시한다.
+- 같은 정보를 제목과 캡션에서 반복하지 않는다.
+
+### 6.4 헤더와 본문 행
+
+- 헤더 배경은 `#2B4A75`, 텍스트는 흰색으로 한다.
+- 헤더 아래에는 `2px solid #7FB3D5` 구분선을 둔다.
+- 긴 표를 노트북에서 볼 때는 헤더에 `position: sticky; top: 0`을 적용할 수 있다.
+- 본문 행 구분선은 `1px solid #F0F2F5`로 얇게 처리한다.
+- 짝수 행에는 `#FAFBFC` 배경을 적용한다.
+- 노트북에서 마우스를 올린 행은 `#EFF6FF`로 표시할 수 있다. 캡처용 정적 표에서는 hover 효과에 의존하지 않는다.
+- 마지막 일반 행의 아래쪽 테두리는 제거한다.
+- 텍스트와 금액은 줄바꿈하지 않도록 `white-space: nowrap`을 기본값으로 한다.
+
+### 6.5 합계 행
+
+- 합계는 별도 행으로 표의 마지막에 추가한다.
+- 합계 행 배경은 `#E8EDF3`, 위쪽 구분선은 `2px solid #94A3B8`로 한다.
+- 합계 행 텍스트는 `#0F172A`, `font-weight: 700`으로 표시한다.
+- `합계 (30년)`처럼 합계의 기준 기간을 첫 번째 열에 함께 적는다.
+- 단순히 마지막 데이터 행을 강조하지 말고, 계산된 합계 행일 때만 이 스타일을 사용한다.
+
+### 6.6 열 너비
+
+5열 연도별 상환표는 다음 비율을 기본값으로 사용한다.
+
+| 열 | 권장 너비 |
+|---|---:|
+| 연차 | 9% |
+| 연간 납입액 | 20% |
+| 상환 원금 | 22% |
+| 납부 이자 | 22% |
+| 대출 잔액 | 27% |
+
+- 열 수나 내용이 달라지면 비율은 조정하되, 금액 열에 충분한 너비를 먼저 배정한다.
+- 열 너비를 고정할 때는 `table-layout: fixed`를 사용한다.
+
+### 6.7 데이터 준비
+
+- `DataFrame.to_html(index=False, border=0)`을 기본 출력 방식으로 사용한다.
+- 원본 DataFrame은 계산 가능한 숫자 상태로 유지하고, 화면 출력용 복사본에서만 금액 문자열로 변환한다.
+- 금액 단위와 자릿수는 열 전체에서 통일한다.
+- 요약표와 상세표는 별도의 CSS 클래스(`summary-table`, `annual-table`)로 구분한다.
+- 블로그용 표에는 핵심 열만 넣고 전체 상세 데이터는 CSV로 분리한다.
+
+권장 HTML 구조:
+
+```python
+display_table = source_table.copy()
+for column in display_table.columns[1:]:
+    display_table[column] = display_table[column].map(format_korean_currency)
+
+table_html = display_table.to_html(
+    index=False,
+    border=0,
+    classes="loan-table annual-table",
+)
+display(HTML(f'<div class="loan-table-wrap">{table_html}</div>'))
+```
+
+권장 핵심 CSS:
+
+```css
+.loan-table-wrap {
+    max-width: 700px;
+    margin: 12px 0 28px;
+    overflow-x: auto;
+    border: 1px solid #f0f2f5;
+    border-radius: 12px;
+}
+.loan-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: #1e293b;
+}
+.loan-table thead th {
+    padding: 8px 12px;
+    background: #2b4a75;
+    border-bottom: 2px solid #7fb3d5;
+    color: white;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+.loan-table tbody td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #f0f2f5;
+    background: white;
+    text-align: right;
+    white-space: nowrap;
+}
+.loan-table thead th:first-child,
+.loan-table tbody td:first-child { text-align: center; }
+.loan-table tbody tr:nth-child(even) td { background: #fafbfc; }
+.loan-table tbody tr:hover td { background: #eff6ff; }
+.loan-table tbody tr:last-child td { border-bottom: 0; }
+.annual-table tbody tr:last-child td {
+    background: #e8edf3;
+    border-top: 2px solid #94a3b8;
+    color: #0f172a;
+    font-weight: 700;
+}
+```
 
 ## 7. 숫자와 문구
 
@@ -155,3 +295,8 @@ fig.savefig(
 - 데이터 라벨이 선이나 다른 글자와 겹치지 않는가?
 - 블로그에서 축소해도 숫자와 각주를 읽을 수 있는가?
 - 세금, 수수료, 배당, 환율 등 계산 전제가 각주에 적혀 있는가?
+- 표의 숫자 열이 오른쪽 정렬되고 고정폭 숫자로 표시되는가?
+- 표의 첫 번째 식별 열과 금액 열의 시각적 위계가 구분되는가?
+- 합계 행이 실제 합계일 때만 별도 배경과 굵기로 강조되는가?
+- 좁은 화면에서 표가 찌그러지지 않고 가로 스크롤되는가?
+- 화면 표시용 금액 문자열과 계산용 숫자 데이터가 분리되어 있는가?
