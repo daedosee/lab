@@ -48,13 +48,20 @@ SCRIPT_DIR = (
     Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
 )
 DEFAULT_OUTPUT_DIR = Path("/content/output") if IS_COLAB else SCRIPT_DIR / "output"
-DEFAULT_DETAIL_OUTPUT = DEFAULT_OUTPUT_DIR / "qqq_monthly_detail.csv"
-DEFAULT_OUTPUT = DEFAULT_OUTPUT_DIR / "qqq_vs_deposit_10y_paths.png"
+DEFAULT_DETAIL_OUTPUT = (
+    DEFAULT_OUTPUT_DIR / "qqq_vs_deposit_balance_flow_monthly_detail.csv"
+)
+DEFAULT_OUTPUT = DEFAULT_OUTPUT_DIR / "qqq_vs_deposit_balance_flow.png"
+
+# 비교할 세 사례의 시작연도를 직접 입력하세요.
+LOW_PERFORMANCE_START_YEAR = 2002
+MIDDLE_PERFORMANCE_START_YEAR = 2010
+HIGH_PERFORMANCE_START_YEAR = 2016
 
 CASES = (
-    (2002, "최저 성과(고갈)"),
-    (2010, "중간 성과"),
-    (2016, "높은 성과"),
+    (LOW_PERFORMANCE_START_YEAR, "최저 성과(고갈)"),
+    (MIDDLE_PERFORMANCE_START_YEAR, "중간 성과"),
+    (HIGH_PERFORMANCE_START_YEAR, "높은 성과"),
 )
 
 INITIAL_RESERVE = 100_000_000
