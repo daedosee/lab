@@ -1,28 +1,30 @@
 # 그래프·표 스타일 가이드
 
-이 문서는 블로그에 삽입할 그래프와 표의 시각 규칙을 일관되게 유지하기 위한 기준이다.
-새 시각 자료를 만들 때 특별한 이유가 없다면 아래 규격을 기본값으로 사용한다.
+블로그용 그래프와 표를 같은 인상과 가독성으로 만들기 위한 저장소 공통 규격이다.
+새 시각 자료는 이 문서의 **공통 토큰**을 먼저 적용하고, 자료 유형에 맞는 규칙만
+추가한다. 특별한 이유로 규격을 벗어날 때는 코드 가까이에 이유를 남긴다.
 
-## 1. 기본 원칙
+## 1. 적용 우선순위
 
-- 최종 결과는 네이버 블로그에서 읽기 쉬운 크기와 대비를 우선한다.
-- 장식보다 데이터 비교와 숫자 가독성을 우선한다.
-- 그래프와 표의 글꼴, 색상, 숫자 표기법을 통일한다.
-- 네이버 블로그 본문과 자연스럽게 이어지도록 순백색 배경을 사용한다.
-- PNG는 블로그 표시 크기보다 크게 생성해 축소했을 때도 선명하게 보이도록 한다.
+1. 색상·글꼴·크기 같은 공통 토큰을 사용한다.
+2. 선그래프, 막대그래프, 표 중 해당 유형의 규칙을 적용한다.
+3. 데이터 겹침이나 잘림이 있으면 위치와 여백만 조정한다.
+4. 특정 연도나 값만을 위한 예외문보다 좌표 계산과 정렬 방식을 개선한다.
 
-## 2. 글꼴
+핵심 원칙:
 
-기본 글꼴은 **Pretendard**로 통일한다.
+- 네이버 블로그에서 축소해도 숫자와 문구가 읽혀야 한다.
+- 장식보다 비교, 숫자, 상태의 전달력을 우선한다.
+- 같은 의미는 모든 프로젝트에서 같은 색과 문구로 표현한다.
+- 계산용 숫자와 화면 표시용 문자열을 분리한다.
+- 제목·부제·각주에 같은 조건을 반복하지 않는다.
+- 배경은 흰색, 결과 이미지는 고해상도 PNG를 기본으로 한다.
 
-권장 굵기:
+## 2. 공통 디자인 토큰
 
-- 전체 제목: Pretendard Bold
-- 패널 제목과 핵심 데이터 라벨: Pretendard SemiBold 또는 Bold
-- 부제, 축, 범례, 표 본문: Pretendard Regular
-- 각주: Pretendard Regular
+### 2.1 글꼴
 
-Matplotlib 글꼴 후보는 다음 순서를 사용한다.
+기본 글꼴은 Pretendard다. 설치되지 않은 환경에서는 아래 순서로 대체한다.
 
 ```python
 FONT_CANDIDATES = (
@@ -33,28 +35,59 @@ FONT_CANDIDATES = (
 )
 ```
 
-Pretendard가 설치되지 않은 환경에서는 첫 번째로 발견되는 대체 글꼴을 사용한다. 재현성이 중요한 환경에서는 실행 전에 Pretendard를 설치하거나 코드에서 글꼴 파일을 등록한다.
+### 2.2 그래프 글자 규격
 
-## 3. 색상
+| 요소 | 크기 | 굵기 | 색상 |
+|---|---:|---|---|
+| 브랜드 라벨 (`대도시 연구실`) | 13pt | Regular | `#777777` |
+| 전체 제목 | 21pt | Bold | `#0B0B0B` |
+| 부제 | 16pt | Regular | `#666666` |
+| 패널 제목 | 18pt | Bold | `#0B0B0B` |
+| X·Y축 제목 | 15pt | Regular | `#777777` |
+| X·Y축 눈금 | 15pt | Regular | `#777777` |
+| 범례 | 15pt | **Regular** | 기본 텍스트색 |
+| 막대 위 수치·선 끝 잔액·고갈 문구 | 14pt | Bold | 해당 데이터 색상 |
+| 기준선 직접 라벨 | 14pt | Regular | `#F59E0B` |
+| 하단 각주 | 13pt | Regular | `#777777` |
+
+범례는 강조 대상이 아니므로 볼드를 사용하지 않는다. 핵심 데이터 라벨만 Bold로
+두어 시각적 위계를 만든다.
+
+재사용할 상수:
 
 ```python
-QQQ_COLOR = "#2F7DD3"           # 주요 데이터, QQQ
-SMH_COLOR = "#F06432"           # SMH
-SPY_COLOR = "#1FAE7A"           # SPY
-BRKB_COLOR = "#F2A000"          # BRK-B
-DEPOSIT_COLOR = "#8D8B85"       # 예금 및 보조 비교선
-DEPLETION_COLOR = "#F06432"      # 고갈 지점
-REFERENCE_COLOR = "#F59E0B"      # 기준선
-SURVIVAL_FACE_COLOR = "#F3F7FD"  # 완주(미소진) 막대 내부
-SURVIVAL_EDGE_COLOR = "#C5D9F4"  # 완주(미소진) 테두리와 해치
-BACKGROUND_COLOR = "#FFFFFF"     # 전체 및 축 배경
-GRID_COLOR = "#DEDCD6"           # 그리드와 구분선
-TEXT_COLOR = "#0B0B0B"           # 제목과 핵심 텍스트
-SECONDARY_TEXT_COLOR = "#666666" # 부제
-TICK_COLOR = "#777777"           # 축 제목과 눈금
-FOOTNOTE_COLOR = "#777777"       # 각주
+BRAND_SIZE = 13
+TITLE_SIZE = 21
+SUBTITLE_SIZE = 16
+PANEL_TITLE_SIZE = 18
+AXIS_TITLE_SIZE = 15
+TICK_SIZE = 15
+LEGEND_SIZE = 15
+DATA_LABEL_SIZE = 14
+REFERENCE_LABEL_SIZE = 14
+FOOTNOTE_SIZE = 13
+```
 
-# 표 전용 색상
+### 2.3 색상
+
+```python
+QQQ_COLOR = "#2F7DD3"
+SMH_COLOR = "#F06432"
+SPY_COLOR = "#1FAE7A"
+BRKB_COLOR = "#F2A000"
+DEPOSIT_COLOR = "#8D8B85"
+DEPLETION_COLOR = "#F06432"
+REFERENCE_COLOR = "#F59E0B"
+SURVIVAL_FACE_COLOR = "#F3F7FD"
+SURVIVAL_EDGE_COLOR = "#C5D9F4"
+
+BACKGROUND_COLOR = "#FFFFFF"
+GRID_COLOR = "#DEDCD6"
+TEXT_COLOR = "#0B0B0B"
+SECONDARY_TEXT_COLOR = "#666666"
+TICK_COLOR = "#777777"
+FOOTNOTE_COLOR = "#777777"
+
 TABLE_HEADER_COLOR = "#2B4A75"
 TABLE_HEADER_RULE_COLOR = "#7FB3D5"
 TABLE_TEXT_COLOR = "#1E293B"
@@ -62,77 +95,50 @@ TABLE_MUTED_TEXT_COLOR = "#64748B"
 TABLE_BORDER_COLOR = "#F0F2F5"
 TABLE_STRIPE_COLOR = "#FAFBFC"
 TABLE_HOVER_COLOR = "#EFF6FF"
-TABLE_TOTAL_COLOR = "#E8EDF3"
-TABLE_TOTAL_RULE_COLOR = "#94A3B8"
+TABLE_SUMMARY_COLOR = "#E8EDF3"
+TABLE_SUMMARY_RULE_COLOR = "#94A3B8"
 ```
 
-- 주요 데이터는 블루, 예금은 웜그레이를 사용한다.
-- 여러 미국 주식·ETF를 함께 비교할 때는 `QQQ` 블루, `SMH` 오렌지,
-  `SPY` 그린, `BRK-B` 앰버를 종목 고정색으로 사용한다.
-- 완주(미소진)는 독립 종목색으로 취급하지 않는다. 연한 블루 배경
-  `#F3F7FD`에 `#C5D9F4` 테두리와 사선 해치를 적용해 상태를 표현한다.
-- 강조색은 의미가 있을 때만 사용한다. 고갈은 오렌지, 기준선은 앰버로 고정한다.
-- 동일한 의미의 데이터에는 모든 그래프와 표에서 같은 색을 사용한다.
+색상의 의미:
 
-### 3.1 종목 비교 범례
+| 대상 | 색상·표현 |
+|---|---|
+| QQQ | 블루 `#2F7DD3` |
+| SMH 또는 고갈 강조 | 오렌지 `#F06432` |
+| SPY | 그린 `#1FAE7A` |
+| BRK-B 또는 보조 앰버 계열 | 앰버 `#F2A000` |
+| 예금·보조 비교선 | 웜그레이 `#8D8B85` |
+| 시작 준비금 기준선 | 앰버 `#F59E0B` |
+| 완주(미소진) 상태 | 연한 블루 배경, 블루 테두리, `///` 해치 |
 
-| 범례 | 색상 | 용도 |
-|---|---|---|
-| QQQ | `#2F7DD3` | QQQ 막대·선·핵심 라벨 |
-| SMH | `#F06432` | SMH 막대·선·핵심 라벨 |
-| SPY | `#1FAE7A` | SPY 막대·선·핵심 라벨 |
-| BRK-B | `#F2A000` | BRK-B 막대·선·핵심 라벨 |
-| 완주(미소진) | 배경 `#F3F7FD`, 선 `#C5D9F4` | 미소진 상태 막대의 테두리·사선 해치 |
+종목색은 데이터의 정체성을, 고갈·완주 표현은 상태를 나타낸다. 두 의미를
+섞지 않는다. 같은 색을 공유하더라도 범례와 문구로 의미가 분명해야 한다.
 
-종목 비교 그래프에서는 범례와 데이터 계열에 위 색을 동일하게 적용한다.
-완주 상태를 표시하는 해치는 `///`를 기본값으로 사용하며, 종목을 나타내는
-색상과 상태를 나타내는 해치가 서로 다른 의미임을 유지한다.
+## 3. 그래프 공통 구조
 
-## 4. 그래프 타이포그래피
-
-| 요소 | 크기 | 굵기 | 색상 |
-|---|---:|---|---|
-| 전체 제목 | 21pt | Bold | `#0B0B0B` |
-| 부제 | 15.5pt | Regular | `#666666` |
-| 패널 제목 | 18pt | Bold | `#0B0B0B` |
-| 축 제목 | 13.5pt | Regular | `#777777` |
-| 축 눈금 | 12pt | Regular | `#777777` |
-| 범례 | 11.5pt | Regular | 기본 텍스트색 |
-| 데이터 라벨 | 13pt | Bold | 해당 데이터 색상 |
-| 각주 | 13pt | Regular | `#777777` |
-
-대표 제목과 부제 형식:
+위에서 아래로 다음 순서를 사용한다.
 
 ```text
-성장 준비금 10년 잔액 변화 | QQQ vs 연 3% 예금
-초기 준비금 1억원 · 매월 100만원 인출 · 10년
+대도시 연구실
+전체 제목
+부제
+범례
+그래프 또는 첫 번째 패널
+각주
 ```
 
-각주 형식:
-
-```text
-QQQ 배당·분할 및 환율 반영
-※ 세금·수수료 제외
-```
-
-## 5. 그래프 구성
-
-- 범례는 별도 영역으로 멀리 떼지 않고 첫 번째 그래프의 우측 상단에 둔다.
-- 범례의 기준선 이름은 본문과 부제의 중복을 피하도록 `시작 준비금`으로 간결하게 쓴다.
-- 그래프가 여러 패널이면 Y축 범위를 동일하게 유지해 직접 비교할 수 있게 한다.
+- 브랜드·제목·부제 세 줄은 한 덩어리로 보이도록 간격을 좁힌다.
+- 제목과 부제는 가깝게 두되 글자가 닿지 않게 한다.
+- 범례는 제목 영역과 그래프 사이에 두고 양쪽과 과도하게 떨어뜨리지 않는다.
+- 패널 제목은 전체 제목보다 작게 쓰며 그래프와 가깝게 둔다.
+- 그래프 좌우 여백은 각각 약 4%를 시작값으로 삼는다.
+- 여러 패널의 세로 간격은 기본값보다 약 10% 좁게 시작한다.
 - 수평 그리드만 사용하고 세로 그리드는 기본적으로 생략한다.
-- 위·오른쪽·왼쪽 테두리는 제거하고 아래쪽 테두리만 연하게 남긴다.
-- QQQ 선은 약 3.2pt, 예금 선은 약 2.6pt로 표시한다.
-- 예금은 그레이 점선으로 표시해 색상 외에도 QQQ와 구분한다.
-- 기준선은 가는 앰버 점선으로 표시한다.
-- 데이터 라벨은 선과 겹치지 않게 배치하고, 흰색 또는 오프화이트 배경을 둘 수 있다.
-- 같은 높이에서 고갈되는 계열의 라벨은 세로 오프셋을 달리해 겹치지 않게 한다.
-- 제목과 첫 번째 패널 사이에는 부제와 최소한의 여백만 둔다.
-- 여러 패널 사이의 간격은 기본값보다 약 10% 줄여 세로 길이를 과도하게 늘리지 않는다.
-- 그래프 영역의 좌우 여백은 각각 4%를 기본값으로 사용해 균형을 맞춘다.
-- 왼쪽 위에는 `대도시 연구실` 출처 표시를 9pt 회색으로 작게 넣는다.
+- 위·오른쪽·왼쪽 테두리는 제거하고 아래 테두리만 연하게 남긴다.
+- 비교 패널은 같은 Y축 범위와 단위를 사용한다.
+- Y축은 특별한 이유가 없으면 0에서 시작한다.
 
-권장 Matplotlib 설정:
+기본 축 설정:
 
 ```python
 fig.patch.set_facecolor(BACKGROUND_COLOR)
@@ -140,113 +146,168 @@ ax.set_facecolor(BACKGROUND_COLOR)
 ax.grid(axis="y", color=GRID_COLOR, linewidth=0.9)
 ax.spines[["top", "right", "left"]].set_visible(False)
 ax.spines["bottom"].set_color(GRID_COLOR)
-ax.tick_params(axis="both", colors=TICK_COLOR, labelsize=12, length=0)
+ax.tick_params(
+    axis="both",
+    colors=TICK_COLOR,
+    labelsize=TICK_SIZE,
+    length=0,
+)
+ax.set_xlabel("연도", fontsize=AXIS_TITLE_SIZE, color=TICK_COLOR)
+ax.set_ylabel("잔액(억원)", fontsize=AXIS_TITLE_SIZE, color=TICK_COLOR)
 ```
 
-## 6. 표 구성
+범례 기본 설정:
 
-표의 기준 구현은 `mortgage_calculator/mortgage_calculator.ipynb`로 한다. 다른 일반 규칙과 충돌하면 표에 대해서는 이 절의 규격을 우선한다.
+```python
+ax.legend(
+    frameon=False,
+    prop={"size": LEGEND_SIZE},  # Regular: weight를 지정하지 않는다.
+)
+```
 
-### 6.1 기본 레이아웃
+## 4. 제목·문구 규칙
 
-- 표는 최대 너비 `700px`의 래퍼 안에 배치한다.
-- 래퍼 바깥 여백은 위 `12px`, 아래 `28px`를 기본값으로 한다.
-- 래퍼에는 `1px solid #F0F2F5` 테두리와 `12px` 모서리 반경을 적용한다.
-- 좁은 화면에서는 내용이 찌그러지지 않도록 `overflow-x: auto`를 사용한다.
-- 표 너비는 `100%`, `border-collapse: separate`, `border-spacing: 0`으로 설정한다.
-- 표 배경은 흰색을 사용하며 과한 그림자는 넣지 않는다.
+### 4.1 제목과 부제
 
-### 6.2 글꼴과 숫자
+제목은 무엇을 비교했는지, 부제는 핵심 입력 조건만 보여준다.
 
-- 기본 글꼴은 Pretendard이며 시스템 글꼴을 대체 후보로 둔다.
-- 표 본문과 헤더의 기본 크기는 `13px`로 한다.
-- 숫자 폭이 행마다 흔들리지 않도록 `font-variant-numeric: tabular-nums`를 사용한다.
-- 금액과 수치는 오른쪽 정렬한다.
-- 상환 방식, 연차, 사례명처럼 행을 식별하는 첫 번째 열은 가운데 정렬한다.
-- 요약표의 첫 번째 열은 `font-weight: 600`으로 강조한다.
-- 상세표의 첫 번째 열은 `#64748B`, Regular로 두어 금액보다 시각적 우선순위를 낮춘다.
+```text
+성장 준비금 10년 잔액 변화 | QQQ vs 연 3% 예금
+초기 준비금 1억원 · 매월 100만원 인출 · 10년
+```
 
-### 6.3 제목과 캡션
+- 제목은 한 줄을 우선하며 중복되는 단어를 줄인다.
+- 축에는 문맥상 자연스러운 `잔액`을 우선한다.
+- 입력한 종목, 기간, 금액은 하드코딩하지 말고 동적으로 만든다.
+- `대도시 연구실`은 출처 각주가 아니라 상단 브랜드 라벨로 취급한다.
 
-| 요소 | 크기 | 굵기 | 색상 | 여백 |
+### 4.2 상태와 기간
+
+- 유지 상태: `✓ 유지` 또는 문맥상 `10년 유지`
+- 고갈 상태: `✕ 고갈`
+- 고갈 기간: `6년 5개월` 또는 `6년 5개월 후 고갈`
+- 고갈 시점 열에서 해당 값이 없으면 `-`
+- 결과표 문구와 그래프 문구는 같은 용어를 사용한다.
+
+이모지 모양의 큰 아이콘보다 절제된 `✓`, `✕` 기호를 사용한다.
+
+### 4.3 금액과 비율
+
+- 원화는 `억원`, `만원` 단위로 읽기 쉽게 표시한다.
+- 예: `1억원`, `1억 9,023만원`, `324만원`.
+- 생존율은 `100% (15/15)`처럼 비율과 건수를 함께 표시한다.
+- 평균 최종 잔액은 금액만 표시하고 비교 비율은 표 아래 설명으로 분리할 수 있다.
+- 계산용 DataFrame은 숫자형으로 유지하고 표시용 복사본만 문자열로 변환한다.
+
+### 4.4 각주
+
+데이터 반영 사항과 제외 조건 중 독자의 해석에 필요한 내용만 짧게 적는다.
+
+```text
+QQQ 배당·분할 및 환율 반영
+※ 세금·수수료 제외
+```
+
+- 제목이나 본문에 이미 설명한 조건을 반복하지 않는다.
+- 실제 계산에서 제외하지 않았거나 설명 가치가 낮은 항목을 관성적으로 나열하지 않는다.
+- 기본 각주 글자는 13pt Regular다.
+
+## 5. 선그래프
+
+- 주요 선은 약 3.2pt, 보조 비교선은 약 2.6pt를 시작값으로 사용한다.
+- 예금은 웜그레이 점선으로 표시해 색상 외에도 투자자산과 구분한다.
+- 시작 준비금은 가는 앰버 점선으로 표시한다.
+- 기준선 문구가 데이터를 가리면 직접 라벨을 제거해도 된다.
+- 직접 라벨을 쓸 때는 `시작 준비금 1억원`처럼 기준과 금액을 함께 적고,
+  데이터가 적은 왼쪽 구간 등 빈 공간에 둔다.
+- 선 끝 잔액과 고갈 문구는 14pt Bold로 표시한다.
+- 선이나 다른 라벨과 겹치면 세로 오프셋을 조정하고 필요하면 흰 배경을 둔다.
+- 같은 지점에서 끝나는 여러 계열은 오프셋을 달리해 모두 읽히게 한다.
+
+## 6. 막대그래프
+
+- 같은 시작연도의 막대와 라벨은 하나의 그룹으로 인식되게 배치한다.
+- 막대 위 수치와 고갈 문구는 14pt Bold로 표시한다.
+- 라벨의 X좌표는 막대 중심(`bar.get_x() + bar.get_width() / 2`)에서 계산한다.
+- 여러 줄 고갈 문구도 막대 중심을 기준으로 가운데 정렬한다.
+- 특정 연도만 옮기는 `if` 문을 두지 말고 텍스트 폭, 그룹 중심, 좌표 변환을
+  이용해 공통 배치 문제를 해결한다.
+- 고갈 막대가 없더라도 범례나 해치로 막대가 없는 이유를 설명한다.
+- 최고·최저 막대의 별도 강조색은 해석상 꼭 필요할 때만 사용한다.
+
+```python
+x_center = bar.get_x() + bar.get_width() / 2
+ax.annotate(
+    label,
+    xy=(x_center, bar.get_height()),
+    xytext=(0, 5),
+    textcoords="offset points",
+    ha="center",
+    va="bottom",
+    fontsize=DATA_LABEL_SIZE,
+    fontweight="bold",
+)
+```
+
+## 7. 표
+
+### 7.1 공통 레이아웃
+
+- 표는 기본 최대 너비 `700px`의 래퍼에 넣는다. 열이 많으면 합리적으로 늘린다.
+- 래퍼는 `overflow-x: auto`, 흰 배경, `1px` 연한 테두리, `12px` 모서리를 사용한다.
+- 표 너비는 `100%`, `border-collapse: separate`, `border-spacing: 0`으로 한다.
+- 과한 그림자는 사용하지 않는다.
+- 블로그 표에는 판단에 필요한 핵심 열만 남기고 상세 데이터는 CSV로 분리한다.
+
+### 7.2 글꼴과 정렬
+
+| 요소 | 크기 | 굵기 | 색상 | 기본 여백 |
 |---|---:|---:|---|---|
 | 표 제목 | 20px | 700 | `#0F172A` | `30px 0 8px` |
 | 표 캡션 | 12px | 400 | `#64748B` | `0 0 10px` |
-| 표 헤더 | 13px | 700 | 흰색 | 셀 내부 `8px 12px` |
-| 표 본문 | 13px | 400 | `#1E293B` | 셀 내부 `7px 12px` |
+| 표 헤더 | 13px | 700 | 흰색 | `8px 12px` |
+| 표 본문 | 13px | 400 | `#1E293B` | `7px 12px` |
 
-- 제목은 `{상환 방식} 연도별 내역`처럼 표의 내용을 바로 알 수 있게 쓴다.
-- 캡션은 `상환 방식 │ 대출금액 │ 금리 │ 기간`처럼 핵심 조건만 한 줄로 표시한다.
-- 같은 정보를 제목과 캡션에서 반복하지 않는다.
+- 숫자는 `font-variant-numeric: tabular-nums`와 오른쪽 정렬을 사용한다.
+- 시작연도·사례명 등 행 식별 열은 가운데 정렬한다.
+- 요약표의 식별 열은 필요할 때 `font-weight: 600`으로 강조한다.
+- 금액 열을 관성적으로 Bold 처리하지 않는다.
+- 음수 또는 고갈 금액을 강조할 때만 `#F06432`를 사용할 수 있다.
 
-### 6.4 헤더와 본문 행
+### 7.3 행과 요약값
 
-- 헤더 배경은 `#2B4A75`, 텍스트는 흰색으로 한다.
-- 헤더 아래에는 `2px solid #7FB3D5` 구분선을 둔다.
-- 긴 표를 노트북에서 볼 때는 헤더에 `position: sticky; top: 0`을 적용할 수 있다.
-- 본문 행 구분선은 `1px solid #F0F2F5`로 얇게 처리한다.
-- 짝수 행에는 `#FAFBFC` 배경을 적용한다.
-- 노트북에서 마우스를 올린 행은 `#EFF6FF`로 표시할 수 있다. 캡처용 정적 표에서는 hover 효과에 의존하지 않는다.
-- 마지막 일반 행의 아래쪽 테두리는 제거한다.
-- 텍스트와 금액은 줄바꿈하지 않도록 `white-space: nowrap`을 기본값으로 한다.
+- 헤더는 `#2B4A75`, 흰 글자, 아래 `2px solid #7FB3D5`를 사용한다.
+- 본문 구분선은 `1px solid #F0F2F5`, 짝수 행은 `#FAFBFC`를 사용한다.
+- 노트북에서는 hover와 sticky header를 쓸 수 있지만 정적 캡처가 없어도 읽혀야 한다.
+- 합계, 평균, 생존율은 실제로 필요한 행만 표 마지막에 둔다.
+- 강조 여부는 자료 목적에 따라 결정하되, 동일한 요약 행끼리는 같은 굵기를 사용한다.
+- 계산용 음수와 화면용 `고갈` 문구를 별도 값으로 관리한다.
 
-### 6.5 합계 행
-
-- 합계는 별도 행으로 표의 마지막에 추가한다.
-- 합계 행 배경은 `#E8EDF3`, 위쪽 구분선은 `2px solid #94A3B8`로 한다.
-- 합계 행 텍스트는 `#0F172A`, `font-weight: 700`으로 표시한다.
-- `합계 (30년)`처럼 합계의 기준 기간을 첫 번째 열에 함께 적는다.
-- 단순히 마지막 데이터 행을 강조하지 말고, 계산된 합계 행일 때만 이 스타일을 사용한다.
-
-### 6.6 열 너비
-
-5열 연도별 상환표는 다음 비율을 기본값으로 사용한다.
-
-| 열 | 권장 너비 |
-|---|---:|
-| 연차 | 9% |
-| 연간 납입액 | 20% |
-| 상환 원금 | 22% |
-| 납부 이자 | 22% |
-| 대출 잔액 | 27% |
-
-- 열 수나 내용이 달라지면 비율은 조정하되, 금액 열에 충분한 너비를 먼저 배정한다.
-- 열 너비를 고정할 때는 `table-layout: fixed`를 사용한다.
-
-### 6.7 데이터 준비
-
-- `DataFrame.to_html(index=False, border=0)`을 기본 출력 방식으로 사용한다.
-- 원본 DataFrame은 계산 가능한 숫자 상태로 유지하고, 화면 출력용 복사본에서만 금액 문자열로 변환한다.
-- 금액 단위와 자릿수는 열 전체에서 통일한다.
-- 요약표와 상세표는 별도의 CSS 클래스(`summary-table`, `annual-table`)로 구분한다.
-- 블로그용 표에는 핵심 열만 넣고 전체 상세 데이터는 CSV로 분리한다.
-
-권장 HTML 구조:
+권장 데이터 준비:
 
 ```python
-display_table = source_table.copy()
-for column in display_table.columns[1:]:
-    display_table[column] = display_table[column].map(format_korean_currency)
-
-table_html = display_table.to_html(
+display_table = result_table.copy()
+display_table["최종 잔액"] = display_table["final_balance_krw"].map(
+    format_korean_currency
+)
+table_html = display_table[DISPLAY_COLUMNS].to_html(
     index=False,
     border=0,
-    classes="loan-table annual-table",
+    classes="result-table summary-table",
 )
-display(HTML(f'<div class="loan-table-wrap">{table_html}</div>'))
 ```
 
-권장 핵심 CSS:
+### 7.4 재사용 CSS
 
 ```css
-.loan-table-wrap {
+.table-wrap {
     max-width: 700px;
     margin: 12px 0 28px;
     overflow-x: auto;
     border: 1px solid #f0f2f5;
     border-radius: 12px;
 }
-.loan-table {
+.result-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
@@ -255,50 +316,37 @@ display(HTML(f'<div class="loan-table-wrap">{table_html}</div>'))
     font-variant-numeric: tabular-nums;
     color: #1e293b;
 }
-.loan-table thead th {
+.result-table th {
     padding: 8px 12px;
     background: #2b4a75;
     border-bottom: 2px solid #7fb3d5;
     color: white;
     font-weight: 700;
-    text-align: right;
     white-space: nowrap;
 }
-.loan-table tbody td {
+.result-table td {
     padding: 7px 12px;
     border-bottom: 1px solid #f0f2f5;
     background: white;
-    text-align: right;
     white-space: nowrap;
 }
-.loan-table thead th:first-child,
-.loan-table tbody td:first-child { text-align: center; }
-.loan-table tbody tr:nth-child(even) td { background: #fafbfc; }
-.loan-table tbody tr:hover td { background: #eff6ff; }
-.loan-table tbody tr:last-child td { border-bottom: 0; }
-.annual-table tbody tr:last-child td {
+.result-table tbody tr:nth-child(even) td { background: #fafbfc; }
+.result-table tbody tr:last-child td { border-bottom: 0; }
+.result-table .number { text-align: right; }
+.result-table .identifier { text-align: center; }
+.result-table .depleted { color: #f06432; }
+.result-table .summary-row td {
     background: #e8edf3;
     border-top: 2px solid #94a3b8;
-    color: #0f172a;
-    font-weight: 700;
 }
 ```
 
-## 7. 숫자와 문구
+## 8. 이미지 저장
 
-- 원화는 읽기 쉬운 `억원`, `만원` 단위로 표시한다.
-- 예: `1억원`, `1억 9,023만원`, `100만원`.
-- 기간은 `6년 5개월`처럼 한글 단위를 사용한다.
-- 고갈되지 않은 경우에는 `고갈되지 않음`으로 명시한다.
-- 비교 사례명은 `최저 사례`, `중간 사례`, `최고 사례`처럼 동일한 문법으로 통일한다.
-- 제목과 라벨에서는 불필요한 전문 용어와 긴 설명을 피한다.
-
-## 8. 이미지 출력
-
-- PNG를 기본 형식으로 사용한다.
-- `dpi=200`을 기본값으로 사용한다.
-- 저장할 때 배경색을 명시해 투명 배경이나 흰색 불일치를 방지한다.
-- 블로그에 올리기 전에 제목, 범례, 데이터 라벨, 각주가 잘리지 않았는지 원본 크기로 확인한다.
+- PNG와 `dpi=200`을 기본값으로 사용한다.
+- 배경색을 명시하고 `bbox_inches="tight"`로 잘림을 방지한다.
+- 그림 크기를 키우는 것만으로 글자를 작게 만들지 않는다. 블로그 축소를 고려해
+  이 가이드의 절대 글자 크기를 유지한다.
 
 ```python
 fig.savefig(
@@ -309,17 +357,50 @@ fig.savefig(
 )
 ```
 
-## 9. 최종 점검
+## 9. 구현 순서
 
-- Pretendard가 실제로 적용됐는가?
-- 제목, 부제, 축, 범례, 각주의 크기가 규격과 일치하는가?
-- QQQ는 블루, 예금은 그레이로 표시됐는가?
-- 축 범위와 단위가 비교에 적합한가?
-- 데이터 라벨이 선이나 다른 글자와 겹치지 않는가?
-- 블로그에서 축소해도 숫자와 각주를 읽을 수 있는가?
-- 세금, 수수료, 배당, 환율 등 계산 전제가 각주에 적혀 있는가?
-- 표의 숫자 열이 오른쪽 정렬되고 고정폭 숫자로 표시되는가?
-- 표의 첫 번째 식별 열과 금액 열의 시각적 위계가 구분되는가?
-- 합계 행이 실제 합계일 때만 별도 배경과 굵기로 강조되는가?
-- 좁은 화면에서 표가 찌그러지지 않고 가로 스크롤되는가?
-- 화면 표시용 금액 문자열과 계산용 숫자 데이터가 분리되어 있는가?
+새 그래프나 표는 다음 순서로 만든다.
+
+1. 공통 색상과 글자 크기 상수를 정의한다.
+2. 계산 결과를 숫자형 DataFrame으로 준비한다.
+3. 제목·부제·축·범례 문구를 입력값에서 생성한다.
+4. 그래프 또는 표시용 표를 만든다.
+5. 데이터 라벨의 중심 정렬과 겹침을 확인한다.
+6. PNG를 저장하고 실제 블로그 표시 크기로 축소해 확인한다.
+7. 특별한 예외 좌표나 중복 스타일 값이 남았는지 정리한다.
+
+프로젝트마다 상수 이름을 새로 만들기보다 이 문서의 이름과 값을 그대로 재사용한다.
+같은 노트북에서 여러 그래프를 만들면 공통 제목 영역, 축 스타일, 저장 로직을
+작은 함수로 공유하되 한 줄짜리 래퍼를 과도하게 만들지 않는다.
+
+## 10. 최종 점검
+
+### 글꼴과 배치
+
+- [ ] Pretendard 또는 지정한 대체 글꼴이 적용됐는가?
+- [ ] 브랜드 13, 제목 21, 부제 16pt가 적용됐는가?
+- [ ] 축과 범례 15, 데이터 라벨 14, 각주 13pt가 적용됐는가?
+- [ ] 범례가 Regular이며 데이터 라벨만 Bold인가?
+- [ ] 브랜드·제목·부제의 간격이 한 묶음처럼 보이는가?
+
+### 그래프
+
+- [ ] 축 단위와 범위가 비교에 적합하며 필요하면 0에서 시작하는가?
+- [ ] 막대 라벨이 막대 중심에 있고 선 끝 라벨이 선과 겹치지 않는가?
+- [ ] 특정 연도만을 위한 위치 예외문 없이 공통 좌표 계산을 사용하는가?
+- [ ] 같은 의미의 데이터와 상태가 지정 색상으로 표시됐는가?
+- [ ] 기준선 문구가 데이터를 가리거나 범례와 중복되지 않는가?
+
+### 표와 문구
+
+- [ ] 숫자 열은 오른쪽, 식별 열은 가운데 정렬됐는가?
+- [ ] 계산용 숫자와 표시용 문자열이 분리됐는가?
+- [ ] 유지·고갈·기간·생존율 문구가 일관적인가?
+- [ ] 요약 행과 색상 강조가 꼭 필요한 곳에만 사용됐는가?
+- [ ] 각주에는 실제로 적용된 반영·제외 조건만 적었는가?
+
+### 출력
+
+- [ ] PNG가 200dpi, 흰 배경으로 저장됐는가?
+- [ ] 제목, 범례, 라벨, 각주가 잘리지 않았는가?
+- [ ] 블로그에 축소해서도 모든 핵심 숫자를 읽을 수 있는가?
