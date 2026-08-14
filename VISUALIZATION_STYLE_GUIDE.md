@@ -39,16 +39,16 @@ FONT_CANDIDATES = (
 
 | 요소 | 크기 | 굵기 | 색상 |
 |---|---:|---|---|
-| 브랜드 라벨 (`대도시 연구실`) | 13pt | Regular | `#777777` |
+| 브랜드 라벨 (`대도시 연구실`) | 13pt | Regular | `#64748B` |
 | 전체 제목 | 21pt | Bold | `#0B0B0B` |
-| 부제 | 16pt | Regular | `#666666` |
+| 부제 | 16pt | Regular | `#64748B` |
 | 패널 제목 | 18pt | Bold | `#0B0B0B` |
 | X·Y축 제목 | 15pt | Regular | `#777777` |
 | X·Y축 눈금 | 15pt | Regular | `#777777` |
 | 범례 | 15pt | **Regular** | 기본 텍스트색 |
 | 막대 위 수치·선 끝 잔액·고갈 문구 | 14pt | Bold | 해당 데이터 색상 |
 | 기준선 직접 라벨 | 14pt | Regular | `#F59E0B` |
-| 하단 각주 | 13pt | Regular | `#777777` |
+| 하단 각주 | 13pt | Regular | `#64748B` |
 
 범례는 강조 대상이 아니므로 볼드를 사용하지 않는다. 핵심 데이터 라벨만 Bold로
 두어 시각적 위계를 만든다.
@@ -84,19 +84,18 @@ SURVIVAL_EDGE_COLOR = "#C5D9F4"
 BACKGROUND_COLOR = "#FFFFFF"
 GRID_COLOR = "#DEDCD6"
 TEXT_COLOR = "#0B0B0B"
-SECONDARY_TEXT_COLOR = "#666666"
+SECONDARY_TEXT_COLOR = "#64748B"
 TICK_COLOR = "#777777"
-FOOTNOTE_COLOR = "#777777"
+FOOTNOTE_COLOR = "#64748B"
 
 TABLE_HEADER_COLOR = "#2B4A75"
-TABLE_HEADER_RULE_COLOR = "#7FB3D5"
 TABLE_TEXT_COLOR = "#1E293B"
 TABLE_MUTED_TEXT_COLOR = "#64748B"
 TABLE_BORDER_COLOR = "#F0F2F5"
 TABLE_STRIPE_COLOR = "#FAFBFC"
 TABLE_HOVER_COLOR = "#EFF6FF"
-TABLE_SUMMARY_COLOR = "#E8EDF3"
-TABLE_SUMMARY_RULE_COLOR = "#94A3B8"
+TABLE_SUMMARY_COLOR = "#F1F4F8"
+TABLE_SUMMARY_RULE_COLOR = "#CBD5E1"
 ```
 
 색상의 의미:
@@ -128,6 +127,7 @@ TABLE_SUMMARY_RULE_COLOR = "#94A3B8"
 ```
 
 - 브랜드·제목·부제 세 줄은 한 덩어리로 보이도록 간격을 좁힌다.
+- 브랜드·부제·각주는 같은 청회색 `#64748B`, 제목은 검정 `#0B0B0B`을 사용한다.
 - 제목과 부제는 가깝게 두되 글자가 닿지 않게 한다.
 - 범례는 제목 영역과 그래프 사이에 두고 양쪽과 과도하게 떨어뜨리지 않는다.
 - 패널 제목은 전체 제목보다 작게 쓰며 그래프와 가깝게 둔다.
@@ -177,6 +177,10 @@ ax.legend(
 ```
 
 - 제목은 한 줄을 우선하며 중복되는 단어를 줄인다.
+- 비교 자료 제목은 `무엇을 보여주는가 | 무엇을 비교하는가` 형식을 우선한다.
+- 자료 유형이 이미 시각적으로 분명하면 제목 끝에 `표`, `그래프`, `차트`를 붙이지 않는다.
+- 한 세트로 사용하는 표와 그래프는 `ISA 운용 방식별 비교`처럼 비교 기준 문구를
+  완전히 같게 쓴다.
 - 축에는 문맥상 자연스러운 `잔액`을 우선한다.
 - 입력한 종목, 기간, 금액은 하드코딩하지 말고 동적으로 만든다.
 - `대도시 연구실`은 출처 각주가 아니라 상단 브랜드 라벨로 취급한다.
@@ -249,39 +253,66 @@ ax.annotate(
 )
 ```
 
-## 7. 표
+## 7. 연차별 자금 흐름도
 
-### 7.1 공통 레이아웃
+- 세로 방향은 시간의 흐름으로 고정하고, 연차별 같은 계좌 박스를 세로선으로 연결한다.
+- 가로 화살표는 실제 계좌 간 이전이 일어난 경우에만 사용한다. 정기 납입액을
+  계좌 사이 화살표로 표시해 자금 이동 방향처럼 보이게 하지 않는다.
+- 박스 중앙에는 해당 시점의 잔액을 크게 쓰고, 납입·인출·이전 금액은 박스 상단
+  모서리에 한 단계 작은 글씨로 표시한다.
+- 첫 시점에는 초기 배분액을 표시해 시작 잔액이 만들어진 이유를 설명한다.
+- 만기 이전처럼 중요한 이벤트는 출발 계좌에서 도착 계좌로 향하는 화살표와
+  `6,000만원 이전` 같은 금액 라벨로 표시한다.
+- 이동이 없는 연차는 숫자 변화만 보여주고 설명 문구와 화살표를 반복하지 않는다.
+- 계좌 종류는 일관된 색으로 구분한다. 같은 계좌의 우선 배분액과 잔여액은
+  진한색·연한색처럼 같은 색 계열을 사용한다.
+- 중단 조건이나 계산 가정은 본문 박스 안에 반복하지 말고 하단 각주로 설명한다.
+- 행 수는 고정 연도보다 사용자가 선택한 종료 조건이나 자금 분배 종료 시점에서
+  동적으로 결정한다.
+
+## 8. 표
+
+### 8.1 공통 레이아웃
 
 - 표는 최대 너비 `700px`의 래퍼에 넣으며, 열이 많아도 이 기준을 늘리지 않는다.
 - 같은 표에 속한 제목, 캡션, 표 래퍼와 각주는 모두 `max-width: 700px`로
-  통일한다. 열이 넘치면 래퍼의 가로 스크롤로 표시한다.
-- 래퍼는 `overflow-x: auto`, 흰 배경, `1px` 연한 테두리, `12px` 모서리를 사용한다.
-- 표 너비는 `100%`, `border-collapse: separate`, `border-spacing: 0`으로 한다.
+  통일한다.
+- 블로그 캡처용 핵심 표는 가로 스크롤이 생기지 않게 열 수와 안쪽 여백을 먼저
+  조정한다. 글자 크기를 줄이는 것은 마지막 수단이다.
+- 래퍼는 `overflow: hidden`, 흰 배경, `1px` 연한 테두리, `12px` 모서리를 사용한다.
+- 표 너비는 `100%`, `table-layout: fixed`, `border-collapse: separate`,
+  `border-spacing: 0`으로 한다.
+- 제목·부제·표·각주의 왼쪽 기준선을 맞춘다. 표 폭을 유지한 채 정렬해야 할 때는
+  표 시작점만 옮기고 표 자체를 늘리지 않는다.
 - 과한 그림자는 사용하지 않는다.
 - 블로그 표에는 판단에 필요한 핵심 열만 남기고 상세 데이터는 CSV로 분리한다.
+- 노트북에서 완성된 HTML 표를 직접 캡처할 계획이면 별도의 Matplotlib 표 PNG나
+  브라우저 자동 캡처 코드를 중복 구현하지 않는다.
 
-### 7.2 글꼴과 정렬
+### 8.2 글꼴과 정렬
 
 | 요소 | 크기 | 굵기 | 색상 | 기본 여백 |
 |---|---:|---:|---|---|
-| 표 제목 | 20px | 700 | `#0F172A` | `30px 0 8px` |
-| 표 캡션 | 13px | 400 | `#64748B` | `0 0 10px` |
-| 표 헤더 | 13px | 700 | 흰색 | `8px 12px` |
-| 표 본문 | 13px | 400 | `#1E293B` | `7px 12px` |
+| 브랜드 라벨 | 13px | 400 | `#64748B` | `0 0 5px` |
+| 표 제목 | 20px | 700 | `#0F172A` | `0 0 4px` |
+| 표 캡션 | 13px | 400 | `#64748B` | `0 0 14px` |
+| 표 헤더 | 13px | 700 | 흰색 | `11px 3px` |
+| 표 본문 | 13px | 400 | `#1E293B` | `11px 3px` |
 
 - 숫자는 `font-variant-numeric: tabular-nums`와 오른쪽 정렬을 사용한다.
 - 표 캡션은 하단 각주와 같은 `13px`를 사용해 보조 설명의 가독성을
   일관되게 유지한다.
-- 시작연도·사례명 등 행 식별 열은 가운데 정렬한다.
+- 시작연도는 가운데, 설명형 행 이름은 왼쪽 정렬한다.
 - 요약표의 식별 열은 필요할 때 `font-weight: 600`으로 강조한다.
 - 금액 열을 관성적으로 Bold 처리하지 않는다.
 - 음수 또는 고갈 금액을 강조할 때만 `#F06432`를 사용할 수 있다.
 
-### 7.3 행과 요약값
+### 8.3 행과 요약값
 
-- 헤더는 `#2B4A75`, 흰 글자, 아래 `2px solid #7FB3D5`를 사용한다.
+- 헤더는 `#2B4A75`, 흰 글자를 사용한다.
 - 본문 구분선은 `1px solid #F0F2F5`, 짝수 행은 `#FAFBFC`를 사용한다.
+- 최종 결과·차이·실효세율처럼 결론을 이루는 연속 행은 `#F1F4F8`로 묶고,
+  첫 결론 행 위에 `2px solid #CBD5E1` 구분선을 둔다.
 - 노트북에서는 hover와 sticky header를 쓸 수 있지만 정적 캡처가 없어도 읽혀야 한다.
 - 합계, 평균, 생존율은 실제로 필요한 행만 표 마지막에 둔다.
 - 강조 여부는 자료 목적에 따라 결정하되, 동일한 요약 행끼리는 같은 굵기를 사용한다.
@@ -301,18 +332,19 @@ table_html = display_table[DISPLAY_COLUMNS].to_html(
 )
 ```
 
-### 7.4 재사용 CSS
+### 8.4 재사용 CSS
 
 ```css
 .table-wrap {
     max-width: 700px;
     margin: 12px 0 28px;
-    overflow-x: auto;
+    overflow: hidden;
     border: 1px solid #f0f2f5;
     border-radius: 12px;
 }
 .result-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
     font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -321,15 +353,14 @@ table_html = display_table[DISPLAY_COLUMNS].to_html(
     color: #1e293b;
 }
 .result-table th {
-    padding: 8px 12px;
+    padding: 11px 3px;
     background: #2b4a75;
-    border-bottom: 2px solid #7fb3d5;
     color: white;
     font-weight: 700;
     white-space: nowrap;
 }
 .result-table td {
-    padding: 7px 12px;
+    padding: 11px 3px;
     border-bottom: 1px solid #f0f2f5;
     background: white;
     white-space: nowrap;
@@ -338,19 +369,26 @@ table_html = display_table[DISPLAY_COLUMNS].to_html(
 .result-table tbody tr:last-child td { border-bottom: 0; }
 .result-table .number { text-align: right; }
 .result-table .identifier { text-align: center; }
+.result-table .row-label { text-align: left; }
 .result-table .depleted { color: #f06432; }
+.result-table .summary-row th,
 .result-table .summary-row td {
-    background: #e8edf3;
-    border-top: 2px solid #94a3b8;
+    background: #f1f4f8;
+    border-top: 2px solid #cbd5e1;
 }
 ```
 
-## 8. 이미지 저장
+## 9. 이미지 저장
 
-- PNG와 `dpi=200`을 기본값으로 사용한다.
+- Matplotlib 그래프는 PNG와 `dpi=200`을 기본값으로 사용한다.
 - 배경색을 명시하고 `bbox_inches="tight"`로 잘림을 방지한다.
 - 그림 크기를 키우는 것만으로 글자를 작게 만들지 않는다. 블로그 축소를 고려해
   이 가이드의 절대 글자 크기를 유지한다.
+- HTML 표는 노트북 화면에서 직접 캡처하는 방식을 우선한다. 표 이미지 한 장을
+  만들기 위해 대용량 브라우저 런타임을 자동 설치하거나, 같은 표를 Matplotlib로
+  다시 그리는 코드를 추가하지 않는다.
+- 표 캡처가 필요하면 CSS 기준 너비 `700px`을 유지하고, 고해상도 화면의 원본을
+  축소 저장하지 않은 채 업로드한다.
 
 ```python
 fig.savefig(
@@ -361,7 +399,7 @@ fig.savefig(
 )
 ```
 
-## 9. 구현 순서
+## 10. 구현 순서
 
 새 그래프나 표는 다음 순서로 만든다.
 
@@ -370,20 +408,21 @@ fig.savefig(
 3. 제목·부제·축·범례 문구를 입력값에서 생성한다.
 4. 그래프 또는 표시용 표를 만든다.
 5. 데이터 라벨의 중심 정렬과 겹침을 확인한다.
-6. PNG를 저장하고 실제 블로그 표시 크기로 축소해 확인한다.
+6. 그래프는 PNG를 저장하고, HTML 표는 실제 노트북 화면에서 캡처 상태를 확인한다.
 7. 특별한 예외 좌표나 중복 스타일 값이 남았는지 정리한다.
 
 프로젝트마다 상수 이름을 새로 만들기보다 이 문서의 이름과 값을 그대로 재사용한다.
 같은 노트북에서 여러 그래프를 만들면 공통 제목 영역, 축 스타일, 저장 로직을
 작은 함수로 공유하되 한 줄짜리 래퍼를 과도하게 만들지 않는다.
 
-## 10. 최종 점검
+## 11. 최종 점검
 
 ### 글꼴과 배치
 
 - [ ] Pretendard 또는 지정한 대체 글꼴이 적용됐는가?
 - [ ] 브랜드 13, 제목 21, 부제 16pt가 적용됐는가?
 - [ ] 축과 범례 15, 데이터 라벨 14, 각주 13pt가 적용됐는가?
+- [ ] 제목은 검정, 브랜드·부제·각주는 청회색 `#64748B`인가?
 - [ ] 범례가 Regular이며 데이터 라벨만 Bold인가?
 - [ ] 브랜드·제목·부제의 간격이 한 묶음처럼 보이는가?
 
@@ -397,7 +436,9 @@ fig.savefig(
 
 ### 표와 문구
 
-- [ ] 숫자 열은 오른쪽, 식별 열은 가운데 정렬됐는가?
+- [ ] 숫자 열은 오른쪽, 시작연도처럼 짧은 식별 열은 가운데 정렬됐는가?
+- [ ] 설명형 행 이름은 왼쪽 정렬됐는가?
+- [ ] 표가 700px 안에서 가로 스크롤 없이 표시되는가?
 - [ ] 계산용 숫자와 표시용 문자열이 분리됐는가?
 - [ ] 유지·고갈·기간·생존율 문구가 일관적인가?
 - [ ] 요약 행과 색상 강조가 꼭 필요한 곳에만 사용됐는가?
@@ -405,6 +446,7 @@ fig.savefig(
 
 ### 출력
 
-- [ ] PNG가 200dpi, 흰 배경으로 저장됐는가?
+- [ ] 그래프 PNG가 200dpi, 흰 배경으로 저장됐는가?
 - [ ] 제목, 범례, 라벨, 각주가 잘리지 않았는가?
 - [ ] 블로그에 축소해서도 모든 핵심 숫자를 읽을 수 있는가?
+- [ ] 직접 캡처할 HTML 표에 불필요한 별도 이미지 생성 코드가 없는가?
