@@ -288,6 +288,11 @@ ax.annotate(
 - 블로그 표에는 판단에 필요한 핵심 열만 남기고 상세 데이터는 CSV로 분리한다.
 - 노트북에서 완성된 HTML 표를 직접 캡처할 계획이면 별도의 Matplotlib 표 PNG나
   브라우저 자동 캡처 코드를 중복 구현하지 않는다.
+- HTML 표는 `section → 브랜드 → 제목 → 캡션 → 테두리 래퍼 → table → 각주`
+  순서로 구성한다. 제목·캡션·각주를 표와 다른 너비의 Markdown 요소로 분리하지
+  않는다.
+- 한 노트북에 표가 여러 개 있으면 프로젝트별 섹션 클래스 아래로 CSS 선택자를
+  한정해 다른 셀의 `DataFrame` 표나 위젯 스타일을 덮어쓰지 않게 한다.
 
 ### 8.2 글꼴과 정렬
 
@@ -300,6 +305,8 @@ ax.annotate(
 | 표 본문 | 13px | 400 | `#1E293B` | `11px 3px` |
 
 - 숫자는 `font-variant-numeric: tabular-nums`와 오른쪽 정렬을 사용한다.
+- 기간·연도·분류처럼 값을 식별하는 열은 가운데 정렬하고, 금액·비율처럼
+  비교하는 수치 열만 오른쪽 정렬한다.
 - 표 캡션은 하단 각주와 같은 `13px`를 사용해 보조 설명의 가독성을
   일관되게 유지한다.
 - 시작연도는 가운데, 설명형 행 이름은 왼쪽 정렬한다.
@@ -317,6 +324,10 @@ ax.annotate(
 - 합계, 평균, 생존율은 실제로 필요한 행만 표 마지막에 둔다.
 - 강조 여부는 자료 목적에 따라 결정하되, 동일한 요약 행끼리는 같은 굵기를 사용한다.
 - 계산용 음수와 화면용 `고갈` 문구를 별도 값으로 관리한다.
+- 열이 많은 표의 긴 헤더는 `word-break: keep-all`과 자연스러운 줄바꿈을
+  허용한다. 헤더를 한 줄로 만들기 위해 표 너비를 `700px`보다 늘리지 않는다.
+- 본문 숫자는 `white-space: nowrap`으로 단위와 숫자가 갈라지지 않게 하되,
+  설명형 셀은 필요하면 줄바꿈을 허용한다.
 
 권장 데이터 준비:
 
@@ -342,6 +353,26 @@ table_html = display_table[DISPLAY_COLUMNS].to_html(
     border: 1px solid #f0f2f5;
     border-radius: 12px;
 }
+.table-section {
+    max-width: 700px;
+    margin: 0 0 28px;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+}
+.table-brand { margin: 0 0 5px; color: #64748b; font-size: 13px; }
+.table-title {
+    margin: 0 0 4px;
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 700;
+}
+.table-caption { margin: 0 0 14px; color: #64748b; font-size: 13px; }
+.table-footnote {
+    margin: 10px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
 .result-table {
     width: 100%;
     table-layout: fixed;
@@ -357,13 +388,15 @@ table_html = display_table[DISPLAY_COLUMNS].to_html(
     background: #2b4a75;
     color: white;
     font-weight: 700;
-    white-space: nowrap;
+    line-height: 1.35;
+    word-break: keep-all;
 }
 .result-table td {
     padding: 11px 3px;
     border-bottom: 1px solid #f0f2f5;
     background: white;
     white-space: nowrap;
+    line-height: 1.45;
 }
 .result-table tbody tr:nth-child(even) td { background: #fafbfc; }
 .result-table tbody tr:last-child td { border-bottom: 0; }
